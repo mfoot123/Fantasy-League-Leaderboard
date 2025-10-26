@@ -4,7 +4,17 @@ from User import User
 
 from datetime import date
 
-def CalculateCurrentNflWeek():
+LEAGUE_ID = "1257085186806382592"
+
+# id, User
+users_dict: dict[str, User] = {}
+
+# roster id, user id
+roster_id_lookup_table: dict[str, str] = {}
+
+rankings: list[User] = []
+
+def calculate_current_nfl_week():
     season_start_date = date(2025, 9, 4)
     today = date.today()
     days_since_start = (today - season_start_date).days
@@ -12,19 +22,19 @@ def CalculateCurrentNflWeek():
 
     return int(current_week)
 
-def CreateUserDictionaryFromJson(users):
+def create_user_dictionary(users):
     for user in users:
         newUser = User(
             display_name=user.get("display_name"),
             user_id=user.get("user_id"),
             team_name=user.get("metadata", {}).get("team_name"),
-            league_id=league_id
+            league_id=LEAGUE_ID
         )
 
         users_dict[newUser.user_id] = newUser
 
-def DetermineUserRosterNumbers():
-    rosters_url = "https://api.sleeper.app/v1/league/" + league_id + "/rosters"
+def determine_user_roster_numbers():
+    rosters_url = "https://api.sleeper.app/v1/league/" + LEAGUE_ID + "/rosters"
     rosters_reponse = requests.get(rosters_url)
 
     if rosters_reponse.status_code == 200:
@@ -38,8 +48,8 @@ def DetermineUserRosterNumbers():
     else:
         print(f"Rosters request failed with status code {rosters_reponse.status_code}")
 
-def CalculateWeeklyPoints(week: int):
-    matchups_url = f"https://api.sleeper.app/v1/league/{league_id}/matchups/{week}"
+def calculate_weekly_points(week: int):
+    matchups_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/matchups/{week}"
     matchups_response = requests.get(matchups_url)
 
     if matchups_response.status_code == 200:
@@ -51,31 +61,29 @@ def CalculateWeeklyPoints(week: int):
     else:
         print(f"Failed to fetch matchups for week {week} (status code {matchups_response.status_code})")
         return None
-
-league_id = "1257085186806382592"
-
-users_url = "https://api.sleeper.app/v1/league/" + league_id  + "/users"
-users_response = requests.get(users_url)
-
-# id, User
-users_dict: dict[str, User] = {}
-
-# roster id, user id
-roster_id_lookup_table: dict[str, str] = {}
-
-if users_response.status_code == 200:
-    users = users_response.json()
-    CreateUserDictionaryFromJson(users)
-    DetermineUserRosterNumbers()
-
-    for week in range(1, CalculateCurrentNflWeek() + 1):
-        CalculateWeeklyPoints(week)
-
-    for user in users_dict.values():
-        print(user.wins)
-        print(user.points_per_week.values())
-
     
+def set_season_rankings(users_dict):
+    for week in range(1, calculate_current_nfl_week() + 1):
+        calculate_weekly_points(week)
 
-else:
-    print(f"Users request failed with status code {users_response.status_code}")
+        rankings = sorted(
+            users_dict.values(),
+            key=lambda u: u.points_per_week[week],
+            reverse=False
+        )  
+
+        for i in range(len(users_dict)):
+            rankings[i].wins += i
+
+def main():
+    users_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/users"
+    users_response = requests.get(users_url)
+    if users_response.ok:
+        create_user_dictionary(users_response.json())
+        determine_user_roster_numbers()
+        set_season_rankings(users_dict)
+    else:
+        print("Failed to fetch users")
+
+if __name__ == "__main__":
+    main()
