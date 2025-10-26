@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-type Users = { [key: string]: number | string }; // allow number or string from backend
+type Users = { [key: string]: number | string };
 
 function App() {
   const [users, setUsers] = useState<Users>({});
