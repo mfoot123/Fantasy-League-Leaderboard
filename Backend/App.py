@@ -2,51 +2,80 @@ import requests
 
 from User import User
 
-from datetime import date, timedelta
+from datetime import date
 
 def CalculateCurrentNflWeek():
-
     season_start_date = date(2025, 9, 4)
     today = date.today()
-
     days_since_start = (today - season_start_date).days
-
     current_week = str(min((days_since_start // 7) + 1, 18))
 
-    return current_week
+    return int(current_week)
 
-def ProcessUsersFromJson(users):
-    usersList = []
+def CreateUserDictionaryFromJson(users):
     for user in users:
         newUser = User(
             display_name=user.get("display_name"),
             user_id=user.get("user_id"),
-            team_name=user.get("metadata", {}).get("team_name")
+            team_name=user.get("metadata", {}).get("team_name"),
+            league_id=league_id
         )
 
-        usersList.append(newUser)
+        users_dict[newUser.user_id] = newUser
 
-    return usersList
+def DetermineUserRosterNumbers():
+    rosters_url = "https://api.sleeper.app/v1/league/" + league_id + "/rosters"
+    rosters_reponse = requests.get(rosters_url)
+
+    if rosters_reponse.status_code == 200:
+        rosters = rosters_reponse.json()
+        for roster in rosters:
+            user_id = roster["owner_id"]
+            if users_dict[user_id]:
+                users_dict[user_id].roster_id = roster["roster_id"]
+                roster_id_lookup_table[roster["roster_id"]] = user_id
+
+    else:
+        print(f"Rosters request failed with status code {rosters_reponse.status_code}")
+
+def CalculateWeeklyPoints(week: int):
+    matchups_url = f"https://api.sleeper.app/v1/league/{league_id}/matchups/{week}"
+    matchups_response = requests.get(matchups_url)
+
+    if matchups_response.status_code == 200:
+        matchups = matchups_response.json()
+        for matchup in matchups:
+            current_user = users_dict[roster_id_lookup_table[matchup.get("roster_id")]]
+            current_user.points_per_week[week] = matchup.get("points", 0.0)
+
+    else:
+        print(f"Failed to fetch matchups for week {week} (status code {matchups_response.status_code})")
+        return None
 
 league_id = "1257085186806382592"
 
 users_url = "https://api.sleeper.app/v1/league/" + league_id  + "/users"
 users_response = requests.get(users_url)
 
+# id, User
+users_dict: dict[str, User] = {}
+
+# roster id, user id
+roster_id_lookup_table: dict[str, str] = {}
+
 if users_response.status_code == 200:
     users = users_response.json()
-    usersList = ProcessUsersFromJson(users)
+    CreateUserDictionaryFromJson(users)
+    DetermineUserRosterNumbers()
+
+    for week in range(1, CalculateCurrentNflWeek() + 1):
+        CalculateWeeklyPoints(week)
+
+    for user in users_dict.values():
+        print(user.wins)
+        print(user.points_per_week.values())
+
+    
 
 else:
-    print(f"Request failed with status code {users_response.status_code}")
-
-matchups_url = "https://api.sleeper.app/v1/league/" + league_id + "/matchups/" + CalculateCurrentNflWeek()
-matchups_response = requests.get(matchups_url)
-
-if matchups_response.status_code == 200:
-    matchups = matchups_response.json()
-    for matchup in matchups:
-        print(matchup)
-
-else:
-    print(f"Request failed with status code {users_response.status_code}")
+    print(f"Users request failed with status code {users_response.status_code}")
