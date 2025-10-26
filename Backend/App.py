@@ -14,13 +14,16 @@ roster_id_lookup_table: dict[str, str] = {}
 
 rankings: list[User] = []
 
-def calculate_current_nfl_week():
-    season_start_date = date(2025, 9, 4)
-    today = date.today()
-    days_since_start = (today - season_start_date).days
-    current_week = str(min((days_since_start // 7) + 1, 18))
+def get_current_nfl_week():
+    nfl_state_url = "https://api.sleeper.app/v1/state/nfl"
+    response = requests.get(nfl_state_url)
 
-    return int(current_week)
+    if response.status_code == 200:
+        data = response.json()
+        return int(data["week"])
+    else:
+        print(f"Failed to fetch NFL state: {response.status_code}")
+        return None
 
 def create_user_dictionary(users):
     for user in users:
@@ -63,7 +66,7 @@ def calculate_weekly_points(week: int):
         return None
     
 def set_season_rankings(users_dict):
-    for week in range(1, calculate_current_nfl_week() + 1):
+    for week in range(1, get_current_nfl_week() + 1):
         calculate_weekly_points(week)
 
         rankings = sorted(
