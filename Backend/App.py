@@ -1,14 +1,15 @@
+from flask import Flask, jsonify
+from flask_cors import CORS
 import requests
-
 from User import User
 
-from datetime import date
+app = Flask(__name__)
+CORS(app)
 
 LEAGUE_ID = "1257085186806382592"
 
 # id, User
 users_dict: dict[str, User] = {}
-
 # roster id, user id
 roster_id_lookup_table: dict[str, str] = {}
 
@@ -78,7 +79,7 @@ def set_season_rankings(users_dict):
         for i in range(len(users_dict)):
             rankings[i].wins += i
 
-def main():
+def get_users_wins():
     users_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/users"
     users_response = requests.get(users_url)
     if users_response.ok:
@@ -86,13 +87,18 @@ def main():
         determine_user_roster_numbers()
         set_season_rankings(users_dict)
 
-        users_wins: dict[str, int] = {}
-        for user in users_dict.values():
-            users_wins[user.display_name] = user.wins
-
-        print(users_wins)
+        return {user.display_name: user.wins for user in users_dict.values()}
     else:
         print("Failed to fetch users")
+        return {}
+
+@app.route("/users", methods=["GET"])
+def get_users():
+    users_wins = get_users_wins()
+    return jsonify(users_wins)
+
+def main():
+    get_users_wins()
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
