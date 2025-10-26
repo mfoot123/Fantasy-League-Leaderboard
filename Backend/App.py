@@ -82,6 +82,12 @@ def main():
         create_user_dictionary(users_response.json())
         determine_user_roster_numbers()
         set_season_rankings(users_dict)
+
+        users_wins: dict[str, int] = {}
+        for user in users_dict.values():
+            users_wins[user.display_name] = user.wins
+
+        print(users_wins)
     else:
         print("Failed to fetch users")
 
