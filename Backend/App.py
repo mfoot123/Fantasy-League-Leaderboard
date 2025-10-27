@@ -67,6 +67,9 @@ def calculate_weekly_points(week: int):
         return None
     
 def set_season_rankings(users_dict):
+    for user in users_dict.values():
+        user.wins = 0
+        
     for week in range(1, get_current_nfl_week() + 1):
         calculate_weekly_points(week)
 

@@ -1,20 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
-type Users = { [key: string]: number | string };
+type Users = { [key: string]: number };
 
 function App() {
   const [users, setUsers] = useState<Users>({});
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
     fetch("http://localhost:5000/users")
       .then((res) => res.json())
-      .then((data: Users) => {
-        const numericData: Users = Object.fromEntries(
-          Object.entries(data).map(([name, wins]) => [name, Number(wins)])
-        );
-        setUsers(numericData);
-      })
-      .catch((err) => console.error(err));
+      .then((data: Users) => setUsers(data))
+      .catch((err) => console.error("Error fetching users:", err));
   }, []);
 
   return (
