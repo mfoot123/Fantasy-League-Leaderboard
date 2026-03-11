@@ -6,3 +6,6 @@ class User:
         self.roster_id: int | None = None
         self.points_per_week: dict[int, float] = {}
         self.wins: int = 0
+        self.bracket: str | None = None  # "winners" or "losers"
+        self.is_eliminated: bool = False
+        self.eliminated_week: int | None = None
