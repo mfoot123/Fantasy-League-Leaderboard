@@ -107,6 +107,7 @@ def calculate_weekly_points(target_dict, week: int):
 def set_season_rankings(dict, min_week, max_week):
     for user in dict.values():
         user.wins = 0
+        user.losses = 0
 
     for week in range(min_week, max_week + 1):
         calculate_weekly_points(dict, week)
@@ -118,10 +119,12 @@ def set_season_rankings(dict, min_week, max_week):
         )
         for i, user in enumerate(weekly_rankings):
             user.wins += i
+            user.losses += (len(weekly_rankings) - 1 - i)
 
 def set_current_week_rankings(dict):
     for user in dict.values():
         user.wins = 0
+        user.losses = 0
 
     week = get_current_nfl_week()
     calculate_weekly_points(dict, week)
@@ -134,6 +137,7 @@ def set_current_week_rankings(dict):
 
     for i, user in enumerate(weekly_rankings):
         user.wins += i
+        user.losses += (len(weekly_rankings) - 1 - i)
 
 def set_winners_and_losers():
     ranked_users = sorted(
@@ -191,6 +195,7 @@ def get_users_wins():
     return {
         user.display_name: {
             "wins": user.wins,
+            "losses": user.losses,
             "bracket": user.bracket,
             "is_eliminated": user.is_eliminated,
             "eliminated_week": user.eliminated_week
@@ -209,7 +214,12 @@ def get_users():
             determine_user_roster_numbers()
             
         set_current_week_rankings(users_dict)
-        return jsonify({user.display_name: user.wins for user in users_dict.values()})
+        return jsonify({
+            user.display_name: {
+                "wins": user.wins, 
+                "losses": user.losses
+            } for user in users_dict.values()
+        })
     
     else:
         users_data = get_users_wins()

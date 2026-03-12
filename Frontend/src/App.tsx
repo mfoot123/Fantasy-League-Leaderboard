@@ -1,77 +1,136 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import "./App.css";
 
-type Users = { [key: string]: number };
+type WeekWins = Record<
+  string,
+  {
+    wins: number;
+    losses: number;
+  }
+>;
+
+type SeasonUser = {
+  wins: number;
+  losses: number;
+  bracket: "winners" | "losers" | null;
+  is_eliminated: boolean;
+  eliminated_week: number | null;
+};
+
+type SeasonWins = Record<string, SeasonUser>;
 
 function App() {
-  const [seasonWins, setSeasonWins] = useState<Users>({});
-  const [weekWins, setWeekWins] = useState<Users>({});
-
+  const [seasonWins, setSeasonWins] = useState<SeasonWins>({});
+  const [weekWins, setWeekWins] = useState<WeekWins>({});
   const fetchedRef = useRef(false);
 
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
+
     fetch("http://localhost:5000/users")
       .then(res => res.json())
-      .then((data: Users) => setSeasonWins(data))
-      .catch(err => console.error("Error fetching season wins:", err));
+      .then((data: SeasonWins) => setSeasonWins(data))
+      .catch(err => console.error("Error fetching season data:", err));
 
-    // fetch current week wins
     fetch("http://localhost:5000/users?week=current")
       .then(res => res.json())
-      .then((data: Users) => setWeekWins(data))
-      .catch(err => console.error("Error fetching week wins:", err));
+      .then((data: WeekWins) => setWeekWins(data))
+      .catch(err => console.error("Error fetching current week data:", err));
   }, []);
 
-  // Sort season wins from highest to lowest
-  const sortedSeason = Object.entries(seasonWins).sort((a, b) => b[1] - a[1]);
-  // Sort week wins from highest to lowest
-  const sortedWeek = Object.entries(weekWins).sort((a, b) => b[1] - a[1]);
+  const sortedSeason = Object.entries(seasonWins).sort(
+    (a, b) => b[1].wins - a[1].wins
+  );
+
+  // lower rank number = better, so sort ascending
+  const sortedWeek = Object.entries(weekWins).sort(
+    (a, b) => a[1].wins - b[1].wins
+  );
 
   return (
-    <div>
-      <h1>Fantasy League Leaderboard</h1>
+    <div className="page">
+      <header className="hero">
+        <div className="hero__pill">Live Synced</div>
+        <h1>Fantasy League Leaderboard</h1>
+      </header>
 
-      <h2>Season Wins</h2>
-      <table border={1} cellPadding={5} style={{ borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Wins</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedSeason.map(([user, wins], index) => (
-            <tr
-              key={user}
-              style={{
-                border: index < 4 ? "2px solid blue" : "1px solid black"
-              }}
-            >
-              <td>{user}</td>
-              <td>{wins}</td>
+      <section className="panel">
+        <div className="panel__title">
+          <h2>Season Standings</h2>
+          <span className="spark">Season overview</span>
+        </div>
+        <table className="table card table-card">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Bracket</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedSeason.map(([user, info], idx) => (
+              <tr
+                key={user}
+                className="row-animate"
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                <td>{user}</td>
+                <td>{info.wins}</td>
+                <td>{info.losses}</td>
+                <td>
+                  {info.bracket ? (
+                    <span className={`badge ${info.bracket}`}>
+                      {info.bracket}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td
+                  className={`status ${info.is_eliminated ? "eliminated" : ""
+                    }`}
+                >
+                  {info.is_eliminated
+                    ? `Eliminated (week ${info.eliminated_week ?? "?"})`
+                    : "Active"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
-      <h2>Current Week Wins</h2>
-      <table border={1} cellPadding={5} style={{ borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Wins</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedWeek.map(([user, wins]) => (
-            <tr key={user}>
-              <td>{user}</td>
-              <td>{wins}</td>
+      <section className="panel">
+        <div className="panel__title">
+          <h2>Current Week Ranking</h2>
+          <span className="spark">This week</span>
+        </div>
+        <table className="table card table-card">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Weekly Wins</th>
+              <th>Weekly Losses</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedWeek.map(([user, record], idx) => (
+              <tr
+                key={user}
+                className="row-animate"
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                <td>{user}</td>
+                <td>{record.wins}</td>
+                <td>{record.losses}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </div>
   );
 }
