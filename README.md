@@ -2,10 +2,6 @@
 
 An algorithmic back end plus animated front end that ranks fantasy football teams weekly and through playoffs.
 
-## Screenshots
-![Season standings](Images/UI%20Season%20Standings.png)
-![Current week standings](Images/UI%20Current%20Week%20Standings.png)
-
 ## How scoring works
 - Regular season: each week, total fantasy points are summed per team. Highest points earns 9, then 8, 7 … down to 0 for last place.
 - Playoffs: top 4 cumulative-win teams enter the winners bracket; bottom 6 enter the losers bracket.
@@ -36,3 +32,7 @@ API base is hard-coded to `http://localhost:5000` in `src/App.tsx`; adjust if ne
 
 ## Testing
 - Backend tests: `cd Backend && pytest -q`
+
+## Screenshots
+![Season standings](Images/UI%20Season%20Standings.png)
+![Current week standings](Images/UI%20Current%20Week%20Standings.png)
