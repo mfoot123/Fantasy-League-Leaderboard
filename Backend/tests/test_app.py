@@ -1,9 +1,10 @@
-import pytest
-import requests
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from app import get_current_nfl_week
+import sys
+
+import requests
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from App import get_current_nfl_week  # noqa: E402
 
 
 def test_get_current_nfl_week_returns_int(monkeypatch):
@@ -11,7 +12,7 @@ def test_get_current_nfl_week_returns_int(monkeypatch):
         status_code = 200
 
         def json(self):
-            return {"week": 8}
+            return {"week": 8, "season_type": "regular"}
 
     def mock_get(url):
         return MockResponse()
