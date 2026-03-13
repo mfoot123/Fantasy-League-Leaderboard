@@ -1,0 +1,36 @@
+# General
+.DS_Store
+*.log
+*.tmp
+*.swp
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*.pyo
+*.coverage
+.coverage.*
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Node / Frontend
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.vite/
+Frontend/.eslintcache
+
+# Build artifacts
+dist/
+coverage/
+
+# IDE / Editor
+.idea/
+.vscode/
+.fleet/
+
+# Environment & local config
+.env
+.env.local
+.env.*.local
