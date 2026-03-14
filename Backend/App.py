@@ -6,6 +6,14 @@ from User import User
 app = Flask(__name__)
 CORS(app)
 
+http = requests.Session()
+http.headers.update(
+    {
+        "User-Agent": "fantasy-leaderboard/1.0 (+https://github.com/mitchfooter/fantasy-league-leaderboard)",
+        "Accept": "application/json",
+    }
+)
+
 LEAGUE_ID = "1257085186806382592"
 PEOPLE_IN_LEAGUE = 10
 LOSERS = 6
@@ -22,7 +30,7 @@ rankings: list[User] = []
 def get_effective_season_data():
     state_url = "https://api.sleeper.app/v1/state/nfl"
     try:
-        resp = requests.get(state_url).json()
+        resp = http.get(state_url, timeout=10).json()
         current_year = int(resp.get("season"))
         season_type = resp.get("season_type") 
         current_week = resp.get("week", 1)
@@ -39,28 +47,13 @@ def get_effective_season_data():
 def get_total_weeks(year):
     url = f"https://api.sleeper.app/v1/nfl/schedule/{year}"
     try:
-        response = requests.get(url)
+        response = http.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
             return len({game.get("week") for game in data})
     except:
         pass
     return 18
-
-def get_current_nfl_week():
-    nfl_state_url = "https://api.sleeper.app/v1/state/nfl"
-    response = requests.get(nfl_state_url)
-
-    if response.status_code == 200:
-        data = response.json()
-        
-        if data.get("season_type") != "regular":
-            return 18 
-            
-        return int(data.get("week", 1))
-    else:
-        print(f"Failed to fetch NFL state: {response.status_code}")
-        return 18
 
 def create_user_dictionary(users):
     users_dict.clear()
@@ -78,7 +71,7 @@ def create_user_dictionary(users):
 
 def determine_user_roster_numbers():
     rosters_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/rosters"
-    response = requests.get(rosters_url)
+    response = http.get(rosters_url, timeout=10)
     
     if response.status_code == 200:
         for roster in response.json():
@@ -89,7 +82,7 @@ def determine_user_roster_numbers():
 
 def calculate_weekly_points(target_dict, week: int):
     matchups_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/matchups/{week}"
-    matchups_response = requests.get(matchups_url)
+    matchups_response = http.get(matchups_url, timeout=10)
 
     if matchups_response.status_code == 200:
             for matchup in matchups_response.json():
@@ -126,7 +119,7 @@ def set_current_week_rankings(dict):
         user.wins = 0
         user.losses = 0
 
-    week = get_current_nfl_week()
+    week = get_effective_season_data()[1]
     calculate_weekly_points(dict, week)
 
     weekly_rankings = sorted(
@@ -170,7 +163,7 @@ def get_users_wins():
     total_weeks = get_total_weeks(target_year)
 
     users_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/users"
-    users_response = requests.get(users_url)
+    users_response = http.get(users_url, timeout=10)
 
     if not users_response.ok:
         print("Failed to fetch users")
@@ -210,7 +203,7 @@ def get_users():
     if week == "current":
         if not users_dict:
             users_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/users"
-            create_user_dictionary(requests.get(users_url).json())
+            create_user_dictionary(http.get(users_url, timeout=10).json())
             determine_user_roster_numbers()
             
         set_current_week_rankings(users_dict)
