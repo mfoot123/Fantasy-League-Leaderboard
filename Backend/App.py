@@ -20,9 +20,9 @@ LOSERS = 6
 WINNERS = 4
 YEAR = 2025
 
-# id, User
+# Id, User
 users_dict: dict[str, User] = {}
-# roster id, user id
+# roster Id, User Id
 roster_id_lookup_table: dict[str, str] = {}
 
 rankings: list[User] = []
