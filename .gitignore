@@ -3,6 +3,7 @@
 *.log
 *.tmp
 *.swp
+npm-debug.log*
 
 # Python / Backend
 __pycache__/
@@ -16,13 +17,10 @@ venv/
 env/
 
 # Node / Frontend
-Frontend/node_modules/
-Frontend/dist/
-Frontend/.vite/
-Frontend/.eslintcache
-
-# Build artifacts
+node_modules/
 dist/
+.vite/
+.eslintcache
 coverage/
 
 # IDE / Editor
@@ -34,3 +32,7 @@ coverage/
 .env
 .env.local
 .env.*.local
+.env.*
+
+# Local app data
+*.sqlite3
