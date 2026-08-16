@@ -1,10 +1,15 @@
+import os
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 from User import User
 
 app = Flask(__name__)
-CORS(app)
+
+cors_origins = os.getenv("CORS_ORIGINS", "*")
+parsed_origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+CORS(app, resources={r"/*": {"origins": parsed_origins if len(parsed_origins) > 1 or parsed_origins[0] != "*" else "*"}})
 
 http = requests.Session()
 http.headers.update(
@@ -281,4 +286,7 @@ def get_users():
         return jsonify(users_data)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "5000"))
+    debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host=host, port=port, debug=debug)
