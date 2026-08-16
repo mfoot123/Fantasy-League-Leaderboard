@@ -8,23 +8,20 @@ An algorithmic back end plus animated front end that ranks fantasy football team
 - Elimination: each playoff week the lowest scorer in winners is eliminated; the highest scorer in losers is eliminated. Play continues until one winner and one loser remain.
 
 ## Project layout
-- `api/App.py` — Flask API (Sleeper data fetch, scoring, bracket logic).
-- `api/User.py` — user model.
 - `src` — Vite + React/TypeScript UI with animated tables.
-- `api/tests` — pytest suite.
+- `public` — static assets for the frontend.
+- Separate Vercel project — Flask API (Sleeper data fetch, scoring, bracket logic).
 
 ## Run locally
-Backend:
-- `cd api`
-- (Optional) create venv, `pip install flask flask-cors requests pytest`
-- `python3 App.py` (starts on `http://127.0.0.1:5000`)
-
 Frontend:
 - `npm install`
 - `npm run dev` (Vite serves at `http://localhost:5173`)
 
-By default the frontend calls `http://127.0.0.1:5000` in `src/App.tsx`. Set
-`VITE_API_BASE_URL` when the API is hosted elsewhere.
+The frontend expects a public backend URL via `VITE_API_BASE_URL` in `src/App.tsx`.
+For local development, you can set:
+- `VITE_API_BASE_URL=http://127.0.0.1:5000`
+
+If the API is hosted elsewhere, set it to that host instead.
 
 ## API endpoints
 - `GET /users?year=2025` — season standings for a selected year, with wins, losses, bracket, and elimination info.
@@ -33,7 +30,8 @@ By default the frontend calls `http://127.0.0.1:5000` in `src/App.tsx`. Set
 The available year tabs are defined in `src/App.tsx`. Add a year there when its season is ready.
 
 ## Testing
-- Backend tests: `cd Backend && pytest -q`
+- Frontend build verification: `npm run build`
+- Backend tests run in the separate API repo/project
 
 ## Screenshots
 ![Season standings](Images/UI%20Season%20Standings.png)
