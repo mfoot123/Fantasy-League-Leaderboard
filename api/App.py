@@ -1,4 +1,5 @@
 import os
+from typing import Dict, List, Optional
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -26,11 +27,11 @@ WINNERS = 4
 DEFAULT_YEAR = 2025
 
 # Id, User
-users_dict: dict[str, User] = {}
+users_dict: Dict[str, User] = {}
 # roster Id, User Id
-roster_id_lookup_table: dict[str, str] = {}
+roster_id_lookup_table: Dict[str, str] = {}
 
-rankings: list[User] = []
+rankings: List[User] = []
 
 def get_effective_season_data():
     state_url = "https://api.sleeper.app/v1/state/nfl"
@@ -60,8 +61,8 @@ def get_total_weeks(year):
         pass
     return 18
 
-def build_user_dictionary(users) -> dict[str, User]:
-    users_by_id_dict: dict[str, User] = {}
+def build_user_dictionary(users) -> Dict[str, User]:
+    users_by_id_dict: Dict[str, User] = {}
     for user in users:
         newUser = User(
             display_name=user.get("display_name"),
@@ -133,7 +134,7 @@ def set_season_rankings(users_by_id_dict, min_week, max_week, roster_lookup=None
             user.wins += i
             user.losses += (len(weekly_rankings) - 1 - i)
 
-def set_current_week_rankings(users_by_id_dict, year: int, roster_lookup=None) -> int | None:
+def set_current_week_rankings(users_by_id_dict, year: int, roster_lookup=None) -> Optional[int]:
     for user in users_by_id_dict.values():
         user.wins = 0
         user.losses = 0
@@ -200,7 +201,7 @@ def get_request_users():
         return None, None
 
     request_users = build_user_dictionary(users_response.json())
-    request_roster_lookup: dict[int, str] = {}
+    request_roster_lookup: Dict[int, str] = {}
     determine_user_roster_numbers(request_users, request_roster_lookup)
     return request_users, request_roster_lookup
 
