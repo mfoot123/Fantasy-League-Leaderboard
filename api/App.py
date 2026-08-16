@@ -286,6 +286,9 @@ def get_users():
         users_data = get_users_wins(year)
         return jsonify(users_data)
 
+# Vercel serverless entrypoint compatibility
+handler = app
+
 if __name__ == "__main__":
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", "5000"))

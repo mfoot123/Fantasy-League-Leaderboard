@@ -1,4 +1,4 @@
-from App import app
+from App import app, handler
 
-# Vercel will expose this function at /api and the Flask routes defined in App.py
-# continue to handle /users, /, and other endpoints.
+# Vercel expects a callable serverless entrypoint. Exporting both names keeps
+# compatibility with local Flask usage and the serverless runtime.
