@@ -45,7 +45,7 @@ def test_set_current_week_rankings_uses_effective_week(monkeypatch):
     users["u2"].points_per_week = {5: 30}
     users["u3"].points_per_week = {5: 20}
 
-    App.set_current_week_rankings(users)
+    assert App.set_current_week_rankings(users, App.DEFAULT_YEAR) == 5
 
     # Sorted ascending → u1 (idx0), u3 (idx1), u2 (idx2)
     assert users["u1"].wins == 0
@@ -66,7 +66,7 @@ def test_set_current_week_rankings_missing_points_default_zero(monkeypatch):
     users["u2"].points_per_week = {9: 5.0}
     users["u3"].points_per_week = {9: -1.0}
 
-    App.set_current_week_rankings(users)
+    assert App.set_current_week_rankings(users, App.DEFAULT_YEAR) == 9
 
     # Week 9 points: u1=0, u2=5, u3=-1 → order: u3 (idx0), u1 (idx1), u2 (idx2)
     assert users["u3"].wins == 0

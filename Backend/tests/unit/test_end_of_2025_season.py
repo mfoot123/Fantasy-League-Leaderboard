@@ -1,9 +1,6 @@
 import copy
 import os
 import sys
-from types import SimpleNamespace
-from typing import Dict
-
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -92,7 +89,7 @@ def client():
 
 
 def test_users_endpoint_returns_expected_snapshot(monkeypatch, client):
-    monkeypatch.setattr("App.get_users_wins", lambda: copy.deepcopy(EXPECTED_SEASON))
+    monkeypatch.setattr("App.get_users_wins", lambda _year: copy.deepcopy(EXPECTED_SEASON))
 
     resp = client.get("/users")
     assert resp.status_code == 200
@@ -102,18 +99,20 @@ def test_users_endpoint_returns_expected_snapshot(monkeypatch, client):
 def test_week_endpoint_includes_wins_and_losses(monkeypatch, client):
     """Ensure weekly endpoint returns wins/losses payload when provided."""
 
-    sample_week: Dict[str, SimpleNamespace] = {
-        "1": SimpleNamespace(display_name="Alpha", wins=2, losses=1),
-        "2": SimpleNamespace(display_name="Beta", wins=4, losses=0),
-    }
-
-    # Override state and ranking calculation for this test
-    monkeypatch.setattr("App.users_dict", sample_week)
-    monkeypatch.setattr("App.set_current_week_rankings", lambda _: None)
+    monkeypatch.setattr(
+        "App.get_current_week_wins",
+        lambda _year: (18, {
+            "Alpha": {"wins": 2, "losses": 1},
+            "Beta": {"wins": 4, "losses": 0},
+        }),
+    )
 
     resp = client.get("/users?week=current")
     assert resp.status_code == 200
     assert resp.get_json() == {
-        "Alpha": {"wins": 2, "losses": 1},
-        "Beta": {"wins": 4, "losses": 0},
+        "week": 18,
+        "rankings": {
+            "Alpha": {"wins": 2, "losses": 1},
+            "Beta": {"wins": 4, "losses": 0},
+        },
     }

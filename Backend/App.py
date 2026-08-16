@@ -18,7 +18,7 @@ LEAGUE_ID = "1257085186806382592"
 PEOPLE_IN_LEAGUE = 10
 LOSERS = 6
 WINNERS = 4
-YEAR = 2025
+DEFAULT_YEAR = 2025
 
 # Id, User
 users_dict: dict[str, User] = {}
@@ -55,10 +55,8 @@ def get_total_weeks(year):
         pass
     return 18
 
-def create_user_dictionary(users):
-    users_dict.clear()
-    roster_id_lookup_table.clear()
-
+def build_user_dictionary(users) -> dict[str, User]:
+    users_by_id_dict: dict[str, User] = {}
     for user in users:
         newUser = User(
             display_name=user.get("display_name"),
@@ -67,20 +65,36 @@ def create_user_dictionary(users):
             league_id=LEAGUE_ID
         )
 
-        users_dict[newUser.user_id] = newUser
+        users_by_id_dict[newUser.user_id] = newUser
 
-def determine_user_roster_numbers():
+    return users_by_id_dict
+
+
+def create_user_dictionary(users):
+    users_dict.clear()
+    users_dict.update(build_user_dictionary(users))
+    roster_id_lookup_table.clear()
+
+def determine_user_roster_numbers(users_by_id_dict=None, roster_lookup=None):
+    if users_by_id_dict is None:
+        users_by_id_dict = users_dict
+    if roster_lookup is None:
+        roster_lookup = roster_id_lookup_table
+
     rosters_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/rosters"
     response = http.get(rosters_url, timeout=10)
     
     if response.status_code == 200:
         for roster in response.json():
             user_id = roster["owner_id"]
-            if user_id in users_dict:
-                users_dict[user_id].roster_id = roster["roster_id"]
-                roster_id_lookup_table[roster["roster_id"]] = user_id
+            if user_id in users_by_id_dict:
+                users_by_id_dict[user_id].roster_id = roster["roster_id"]
+                roster_lookup[roster["roster_id"]] = user_id
 
-def calculate_weekly_points(target_dict, week: int):
+def calculate_weekly_points(users_by_id_dict, week: int, roster_lookup=None):
+    if roster_lookup is None:
+        roster_lookup = roster_id_lookup_table
+
     matchups_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/matchups/{week}"
     matchups_response = http.get(matchups_url, timeout=10)
 
@@ -88,25 +102,25 @@ def calculate_weekly_points(target_dict, week: int):
             for matchup in matchups_response.json():
                 roster_id = matchup.get("roster_id")
                 # Safety check: Only process rosters we know about
-                if roster_id in roster_id_lookup_table:
-                    user_id = roster_id_lookup_table[roster_id]
-                    # Only update if the user is in the target_dict
-                    if user_id in target_dict:
-                        current_user = target_dict[user_id]
+                if roster_id in roster_lookup:
+                    user_id = roster_lookup[roster_id]
+                    # Only update if the user belongs to this request.
+                    if user_id in users_by_id_dict:
+                        current_user = users_by_id_dict[user_id]
                         current_user.points_per_week[week] = matchup.get("points", 0.0)
     else:
         print(f"Failed to fetch matchups for week {week} (status code {matchups_response.status_code})")
     
-def set_season_rankings(dict, min_week, max_week):
-    for user in dict.values():
+def set_season_rankings(users_by_id_dict, min_week, max_week, roster_lookup=None):
+    for user in users_by_id_dict.values():
         user.wins = 0
         user.losses = 0
 
     for week in range(min_week, max_week + 1):
-        calculate_weekly_points(dict, week)
+        calculate_weekly_points(users_by_id_dict, week, roster_lookup)
 
         weekly_rankings = sorted(
-            dict.values(),
+            users_by_id_dict.values(),
             key=lambda u: u.points_per_week.get(week, 0.0),
             reverse=False
         )
@@ -114,16 +128,21 @@ def set_season_rankings(dict, min_week, max_week):
             user.wins += i
             user.losses += (len(weekly_rankings) - 1 - i)
 
-def set_current_week_rankings(dict):
-    for user in dict.values():
+def set_current_week_rankings(users_by_id_dict, year: int, roster_lookup=None) -> int | None:
+    for user in users_by_id_dict.values():
         user.wins = 0
         user.losses = 0
 
-    week = get_effective_season_data()[1]
-    calculate_weekly_points(dict, week)
+    effective_year, week = get_effective_season_data()
+    if year < effective_year:
+        week = get_total_weeks(year)
+    elif year > effective_year:
+        return None
+
+    calculate_weekly_points(users_by_id_dict, week, roster_lookup)
 
     weekly_rankings = sorted(
-        dict.values(),
+        users_by_id_dict.values(),
         key=lambda u: u.points_per_week.get(week, 0.0),
         reverse=False
     )
@@ -132,9 +151,14 @@ def set_current_week_rankings(dict):
         user.wins += i
         user.losses += (len(weekly_rankings) - 1 - i)
 
-def set_winners_and_losers():
+    return week
+
+def set_winners_and_losers(users_by_id_dict=None):
+    if users_by_id_dict is None:
+        users_by_id_dict = users_dict
+
     ranked_users = sorted(
-            users_dict.values(),
+            users_by_id_dict.values(),
             key=lambda u: (u.wins, sum(u.points_per_week.values())),
             reverse=True
         )
@@ -144,46 +168,65 @@ def set_winners_and_losers():
     for user in ranked_users[-LOSERS:]:
         user.bracket = "losers"
 
-def drop_week_extremes_from_brackets(week: int):
-    active_winners = [u for u in users_dict.values() if u.bracket == "winners" and not u.is_eliminated]
+def drop_week_extremes_from_brackets(week: int, users_by_id_dict=None):
+    if users_by_id_dict is None:
+        users_by_id_dict = users_dict
+
+    active_winners = [u for u in users_by_id_dict.values() if u.bracket == "winners" and not u.is_eliminated]
     if len(active_winners) > 1:
         lowest = min(active_winners, key=lambda u: (u.points_per_week.get(week, 0.0), sum(u.points_per_week.values())))
         lowest.is_eliminated = True
         lowest.eliminated_week = week
 
-    active_losers = [u for u in users_dict.values() if u.bracket == "losers" and not u.is_eliminated]
+    active_losers = [u for u in users_by_id_dict.values() if u.bracket == "losers" and not u.is_eliminated]
     if len(active_losers) > 1:
         highest = max(active_losers, key=lambda u: (u.points_per_week.get(week, 0.0), sum(u.points_per_week.values())))
         highest.is_eliminated = True
         highest.eliminated_week = week
 
 
-def get_users_wins():
-    target_year, active_week = get_effective_season_data()
-    total_weeks = get_total_weeks(target_year)
-
+def get_request_users():
+    """Fetch league data into objects owned by one HTTP request."""
     users_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/users"
     users_response = http.get(users_url, timeout=10)
 
     if not users_response.ok:
         print("Failed to fetch users")
-        return {}
+        return None, None
 
-    create_user_dictionary(users_response.json())
-    determine_user_roster_numbers()
+    request_users = build_user_dictionary(users_response.json())
+    request_roster_lookup: dict[int, str] = {}
+    determine_user_roster_numbers(request_users, request_roster_lookup)
+    return request_users, request_roster_lookup
+
+
+def get_users_wins(year: int):
+    effective_year, active_week = get_effective_season_data()
+    target_year = year
+    total_weeks = get_total_weeks(target_year)
+
+    # A past season is complete, while a future season has no weekly results yet.
+    if target_year < effective_year:
+        active_week = total_weeks
+    elif target_year > effective_year:
+        active_week = 0
+
+    request_users, request_roster_lookup = get_request_users()
+    if request_users is None:
+        return {}
 
     playoff_start_week = total_weeks - LOSERS + 1 
     current_active_week = min(active_week, total_weeks)
 
     reg_season_end = min(current_active_week, playoff_start_week - 1)
-    set_season_rankings(users_dict, 1, reg_season_end)
+    set_season_rankings(request_users, 1, reg_season_end, request_roster_lookup)
 
     if current_active_week >= playoff_start_week:
-        set_winners_and_losers()
+        set_winners_and_losers(request_users)
 
         for week in range(playoff_start_week, current_active_week + 1):
-            calculate_weekly_points(users_dict, week)
-            drop_week_extremes_from_brackets(week)
+            calculate_weekly_points(request_users, week, request_roster_lookup)
+            drop_week_extremes_from_brackets(week, request_users)
 
     return {
         user.display_name: {
@@ -193,29 +236,48 @@ def get_users_wins():
             "is_eliminated": user.is_eliminated,
             "eliminated_week": user.eliminated_week
         } 
-        for user in users_dict.values()
+        for user in request_users.values()
     }
+
+
+def get_current_week_wins(year: int):
+    request_users, request_roster_lookup = get_request_users()
+    if request_users is None:
+        return None, {}
+
+    current_week = set_current_week_rankings(request_users, year, request_roster_lookup)
+    return current_week, {
+        user.display_name: {
+            "wins": user.wins,
+            "losses": user.losses
+        } for user in request_users.values()
+    }
+
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({
+        "status": "ok",
+        "users_endpoint": "/users?year=2025",
+    })
 
 @app.route("/users", methods=["GET"])
 def get_users():
     week = request.args.get("week")
+    year_arg = request.args.get("year")
+    try:
+        year = int(year_arg) if year_arg is not None else DEFAULT_YEAR
+    except ValueError:
+        return jsonify({"error": "year must be a whole number"}), 400
 
     if week == "current":
-        if not users_dict:
-            users_url = f"https://api.sleeper.app/v1/league/{LEAGUE_ID}/users"
-            create_user_dictionary(http.get(users_url, timeout=10).json())
-            determine_user_roster_numbers()
-            
-        set_current_week_rankings(users_dict)
+        current_week, current_rankings = get_current_week_wins(year)
         return jsonify({
-            user.display_name: {
-                "wins": user.wins, 
-                "losses": user.losses
-            } for user in users_dict.values()
+            "week": current_week,
+            "rankings": current_rankings,
         })
     
     else:
-        users_data = get_users_wins()
+        users_data = get_users_wins(year)
         return jsonify(users_data)
 
 if __name__ == "__main__":

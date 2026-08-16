@@ -43,7 +43,7 @@ def test_set_winners_and_losers_after_current_week(monkeypatch):
     monkeypatch.setattr(App, "get_effective_season_data", lambda: (2025, week))
     monkeypatch.setattr(App, "calculate_weekly_points", lambda *_args, **_kwargs: None)
 
-    App.set_current_week_rankings(users)
+    App.set_current_week_rankings(users, App.DEFAULT_YEAR)
     App.set_winners_and_losers()
 
     winners = [u for u in users.values() if u.bracket == "winners"]
@@ -69,7 +69,7 @@ def test_set_current_week_rankings_with_ten_users(monkeypatch):
     monkeypatch.setattr(App, "get_effective_season_data", lambda: (2025, week))
     monkeypatch.setattr(App, "calculate_weekly_points", lambda *_args, **_kwargs: None)
 
-    App.set_current_week_rankings(users)
+    App.set_current_week_rankings(users, App.DEFAULT_YEAR)
 
     # verify top and bottom only to keep test concise
     assert users["u1"].wins == 9  # best score, but sorted ascending wins are index (worst=0)

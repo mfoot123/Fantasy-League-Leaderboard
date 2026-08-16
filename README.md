@@ -24,11 +24,14 @@ Frontend:
 - `npm install`
 - `npm run dev` (Vite serves at `http://localhost:5173`)
 
-API base is hard-coded to `http://localhost:5000` in `src/App.tsx`; adjust if needed.
+By default the frontend calls `http://127.0.0.1:5000` in `src/App.tsx`. Set
+`VITE_API_BASE_URL` when the API is hosted elsewhere.
 
 ## API endpoints
-- `GET /users` — season standings with wins, losses, bracket, elimination info.
-- `GET /users?week=current` — current-week ranks (wins/losses fields).
+- `GET /users?year=2025` — season standings for a selected year, with wins, losses, bracket, and elimination info.
+- `GET /users?week=current&year=2025` — current-week rank data for that year, including the resolved `week` number and `rankings` (wins/losses fields).
+
+The available year tabs are defined in `Frontend/src/App.tsx`. Add a year there when its season is ready.
 
 ## Testing
 - Backend tests: `cd Backend && pytest -q`

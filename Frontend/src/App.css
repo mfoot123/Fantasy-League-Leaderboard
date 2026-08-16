@@ -24,32 +24,6 @@ body {
   overflow: hidden;
 }
 
-.page::before,
-.page::after {
-  content: "";
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.45;
-  animation: float 16s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.page::before {
-  background: #38bdf8;
-  top: -60px;
-  left: -40px;
-}
-
-.page::after {
-  background: #a855f7;
-  right: -80px;
-  bottom: -40px;
-  animation-delay: 4s;
-}
-
 .hero {
   display: flex;
   flex-direction: column;
@@ -72,9 +46,42 @@ body {
   margin: 0 0 6px;
 }
 
-.hero p {
-  margin: 0;
-  color: #475569;
+.year-tabs {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.year-tabs__list {
+  display: flex;
+  gap: 8px;
+}
+
+.year-tabs__tab {
+  appearance: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.year-tabs__tab:hover {
+  background: rgba(14, 165, 233, 0.08);
+  color: #0f172a;
+}
+
+.year-tabs__tab:focus-visible {
+  border-radius: 8px 8px 0 0;
+  outline: 3px solid rgba(14, 165, 233, 0.45);
+  outline-offset: -3px;
+}
+
+.year-tabs__tab.is-active {
+  border-bottom-color: #0ea5e9;
+  color: #0369a1;
 }
 
 .panel {
@@ -92,16 +99,6 @@ body {
 .panel__title h2 {
   margin-bottom: 10px;
   color: #0f172a;
-}
-
-.spark {
-  background: rgba(14, 165, 233, 0.12);
-  color: #0ea5e9;
-  border: 1px solid rgba(14, 165, 233, 0.25);
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.9rem;
 }
 
 .card {
@@ -140,6 +137,12 @@ body {
   transition: transform 180ms ease, background 180ms ease;
 }
 
+.table td.table-message {
+  color: #b91c1c;
+  font-weight: 600;
+  text-align: center;
+}
+
 .badge {
   padding: 4px 8px;
   border-radius: 999px;
@@ -167,6 +170,14 @@ body {
   color: #b91c1c;
 }
 
+.status.winner {
+  color: #166534;
+}
+
+.status.loser {
+  color: #991b1b;
+}
+
 .row-animate {
   animation: fadeUp 420ms ease forwards;
   opacity: 0;
@@ -183,16 +194,6 @@ body {
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-14px) scale(1.05);
-  }
-}
-
 @keyframes pulse {
   0%,
   100% {
@@ -200,7 +201,7 @@ body {
     box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
   }
   50% {
-    transform: scale(1.03);
-    box-shadow: 0 14px 40px rgba(59, 130, 246, 0.45);
+    transform: scale(1.08);
+    box-shadow: 0 18px 50px rgba(59, 130, 246, 0.45);
   }
 }
