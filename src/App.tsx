@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 
 const AVAILABLE_YEARS = [2026, 2025];
@@ -114,119 +115,122 @@ function App() {
   }
 
   return (
-    <div className="page">
-      <header className="hero">
-        <div className="hero__pill">Live Synced</div>
-        <h1>Fantasy League Leaderboard</h1>
-      </header>
+    <>
+      <Analytics />
+      <div className="page">
+        <header className="hero">
+          <div className="hero__pill">Live Synced</div>
+          <h1>Fantasy League Leaderboard</h1>
+        </header>
 
-      <nav className="year-tabs" aria-label="Season year">
-        <div className="year-tabs__list" role="tablist">
-          {AVAILABLE_YEARS.map(year => (
-            <button
-              key={year}
-              className={`year-tabs__tab ${selectedYear === year ? "is-active" : ""}`}
-              role="tab"
-              type="button"
-              aria-selected={selectedYear === year}
-              onClick={() => setSelectedYear(year)}
-            >
-              {year}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <section className="panel">
-        <div className="panel__title">
-          <h2>{selectedYear} Season Standings</h2>
-        </div>
-        <table className="table card table-card">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Total Wins</th>
-              <th>Total Losses</th>
-              <th>Bracket</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {seasonError ? (
-              <tr>
-                <td className="table-message" colSpan={5}>{seasonError}</td>
-              </tr>
-            ) : sortedSeason.map(([user, info], idx) => (
-              <tr
-                key={user}
-                className="row-animate"
-                style={{ animationDelay: `${idx * 60}ms` }}
+        <nav className="year-tabs" aria-label="Season year">
+          <div className="year-tabs__list" role="tablist">
+            {AVAILABLE_YEARS.map(year => (
+              <button
+                key={year}
+                className={`year-tabs__tab ${selectedYear === year ? "is-active" : ""}`}
+                role="tab"
+                type="button"
+                aria-selected={selectedYear === year}
+                onClick={() => setSelectedYear(year)}
               >
-                <td>{user}</td>
-                <td>{info.wins}</td>
-                <td>{info.losses}</td>
-                <td>
-                  {info.bracket ? (
-                    <span className={`badge ${info.bracket}`}>
-                      {info.bracket}
-                    </span>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td
-                  className={`status ${info.is_eliminated
-                    ? "eliminated"
-                    : hasFinalists && info.bracket === "winners"
-                      ? "winner"
-                      : hasFinalists && info.bracket === "losers"
-                        ? "loser"
-                        : ""
-                    }`}
+                {year}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <section className="panel">
+          <div className="panel__title">
+            <h2>{selectedYear} Season Standings</h2>
+          </div>
+          <table className="table card table-card">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Total Wins</th>
+                <th>Total Losses</th>
+                <th>Bracket</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {seasonError ? (
+                <tr>
+                  <td className="table-message" colSpan={5}>{seasonError}</td>
+                </tr>
+              ) : sortedSeason.map(([user, info], idx) => (
+                <tr
+                  key={user}
+                  className="row-animate"
+                  style={{ animationDelay: `${idx * 60}ms` }}
                 >
-                  {getSeasonStatus(info)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+                  <td>{user}</td>
+                  <td>{info.wins}</td>
+                  <td>{info.losses}</td>
+                  <td>
+                    {info.bracket ? (
+                      <span className={`badge ${info.bracket}`}>
+                        {info.bracket}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td
+                    className={`status ${info.is_eliminated
+                      ? "eliminated"
+                      : hasFinalists && info.bracket === "winners"
+                        ? "winner"
+                        : hasFinalists && info.bracket === "losers"
+                          ? "loser"
+                          : ""
+                      }`}
+                  >
+                    {getSeasonStatus(info)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
 
-      <section className="panel">
-        <div className="panel__title">
-          <h2>
-            {selectedYear} Current Week Ranking
-            {currentWeek !== null ? ` — Week ${currentWeek}` : ""}
-          </h2>
-        </div>
-        <table className="table card table-card">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Weekly Wins</th>
-              <th>Weekly Losses</th>
-            </tr>
-          </thead>
-          <tbody>
-            {weekError ? (
+        <section className="panel">
+          <div className="panel__title">
+            <h2>
+              {selectedYear} Current Week Ranking
+              {currentWeek !== null ? ` — Week ${currentWeek}` : ""}
+            </h2>
+          </div>
+          <table className="table card table-card">
+            <thead>
               <tr>
-                <td className="table-message" colSpan={3}>{weekError}</td>
+                <th>User</th>
+                <th>Weekly Wins</th>
+                <th>Weekly Losses</th>
               </tr>
-            ) : sortedWeek.map(([user, record], idx) => (
-              <tr
-                key={user}
-                className="row-animate"
-                style={{ animationDelay: `${idx * 60}ms` }}
-              >
-                <td>{user}</td>
-                <td>{record.wins}</td>
-                <td>{record.losses}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </div>
+            </thead>
+            <tbody>
+              {weekError ? (
+                <tr>
+                  <td className="table-message" colSpan={3}>{weekError}</td>
+                </tr>
+              ) : sortedWeek.map(([user, record], idx) => (
+                <tr
+                  key={user}
+                  className="row-animate"
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                >
+                  <td>{user}</td>
+                  <td>{record.wins}</td>
+                  <td>{record.losses}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </>
   );
 }
 
