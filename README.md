@@ -8,19 +8,18 @@ An algorithmic back end plus animated front end that ranks fantasy football team
 - Elimination: each playoff week the lowest scorer in winners is eliminated; the highest scorer in losers is eliminated. Play continues until one winner and one loser remain.
 
 ## Project layout
-- `Backend/App.py` — Flask API (Sleeper data fetch, scoring, bracket logic).
-- `Backend/User.py` — user model.
-- `Frontend/src` — Vite + React/TypeScript UI with animated tables.
-- `Backend/tests` — pytest suite.
+- `api/App.py` — Flask API (Sleeper data fetch, scoring, bracket logic).
+- `api/User.py` — user model.
+- `src` — Vite + React/TypeScript UI with animated tables.
+- `api/tests` — pytest suite.
 
 ## Run locally
 Backend:
-- `cd Backend`
+- `cd api`
 - (Optional) create venv, `pip install flask flask-cors requests pytest`
 - `python3 App.py` (starts on `http://127.0.0.1:5000`)
 
 Frontend:
-- `cd Frontend`
 - `npm install`
 - `npm run dev` (Vite serves at `http://localhost:5173`)
 
@@ -31,7 +30,7 @@ By default the frontend calls `http://127.0.0.1:5000` in `src/App.tsx`. Set
 - `GET /users?year=2025` — season standings for a selected year, with wins, losses, bracket, and elimination info.
 - `GET /users?week=current&year=2025` — current-week rank data for that year, including the resolved `week` number and `rankings` (wins/losses fields).
 
-The available year tabs are defined in `Frontend/src/App.tsx`. Add a year there when its season is ready.
+The available year tabs are defined in `src/App.tsx`. Add a year there when its season is ready.
 
 ## Testing
 - Backend tests: `cd Backend && pytest -q`
