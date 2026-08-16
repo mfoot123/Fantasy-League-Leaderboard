@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const AVAILABLE_YEARS = [2025, 2026];
+const AVAILABLE_YEARS = [2026, 2025];
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 type WeekWins = Record<
