@@ -144,55 +144,57 @@ function App() {
           <div className="panel__title">
             <h2>{selectedYear} Season Standings</h2>
           </div>
-          <table className="table card table-card">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Total Wins</th>
-                <th>Total Losses</th>
-                <th>Bracket</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {seasonError ? (
+          <div className="table-scroll table-scroll--season">
+            <table className="table table-card">
+              <thead>
                 <tr>
-                  <td className="table-message" colSpan={5}>{seasonError}</td>
+                  <th>User</th>
+                  <th>Total Wins</th>
+                  <th>Total Losses</th>
+                  <th>Bracket</th>
+                  <th>Status</th>
                 </tr>
-              ) : sortedSeason.map(([user, info], idx) => (
-                <tr
-                  key={user}
-                  className="row-animate"
-                  style={{ animationDelay: `${idx * 60}ms` }}
-                >
-                  <td>{user}</td>
-                  <td>{info.wins}</td>
-                  <td>{info.losses}</td>
-                  <td>
-                    {info.bracket ? (
-                      <span className={`badge ${info.bracket}`}>
-                        {info.bracket}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td
-                    className={`status ${info.is_eliminated
-                      ? "eliminated"
-                      : hasFinalists && info.bracket === "winners"
-                        ? "winner"
-                        : hasFinalists && info.bracket === "losers"
-                          ? "loser"
-                          : ""
-                      }`}
+              </thead>
+              <tbody>
+                {seasonError ? (
+                  <tr>
+                    <td className="table-message" colSpan={5}>{seasonError}</td>
+                  </tr>
+                ) : sortedSeason.map(([user, info], idx) => (
+                  <tr
+                    key={user}
+                    className="row-animate"
+                    style={{ animationDelay: `${idx * 60}ms` }}
                   >
-                    {getSeasonStatus(info)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <td>{user}</td>
+                    <td>{info.wins}</td>
+                    <td>{info.losses}</td>
+                    <td>
+                      {info.bracket ? (
+                        <span className={`badge ${info.bracket}`}>
+                          {info.bracket}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td
+                      className={`status ${info.is_eliminated
+                        ? "eliminated"
+                        : hasFinalists && info.bracket === "winners"
+                          ? "winner"
+                          : hasFinalists && info.bracket === "losers"
+                            ? "loser"
+                            : ""
+                        }`}
+                    >
+                      {getSeasonStatus(info)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section className="panel">
@@ -202,32 +204,34 @@ function App() {
               {currentWeek !== null ? ` — Week ${currentWeek}` : ""}
             </h2>
           </div>
-          <table className="table card table-card">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Weekly Wins</th>
-                <th>Weekly Losses</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weekError ? (
+          <div className="table-scroll">
+            <table className="table table-card">
+              <thead>
                 <tr>
-                  <td className="table-message" colSpan={3}>{weekError}</td>
+                  <th>User</th>
+                  <th>Weekly Wins</th>
+                  <th>Weekly Losses</th>
                 </tr>
-              ) : sortedWeek.map(([user, record], idx) => (
-                <tr
-                  key={user}
-                  className="row-animate"
-                  style={{ animationDelay: `${idx * 60}ms` }}
-                >
-                  <td>{user}</td>
-                  <td>{record.wins}</td>
-                  <td>{record.losses}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {weekError ? (
+                  <tr>
+                    <td className="table-message" colSpan={3}>{weekError}</td>
+                  </tr>
+                ) : sortedWeek.map(([user, record], idx) => (
+                  <tr
+                    key={user}
+                    className="row-animate"
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    <td>{user}</td>
+                    <td>{record.wins}</td>
+                    <td>{record.losses}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </>
